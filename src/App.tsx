@@ -11,6 +11,14 @@ import {
 } from './components/AnimeHardwareVisuals';
 import { AnimeWorkshopBench } from './components/AnimeWorkshopBench';
 
+// GitHub Pages serves the site from /<repo>/, so strip that prefix when routing.
+const BASE_PATH = __BASE_PATH__;
+const currentPath = () => {
+  const { pathname } = window.location;
+  const path = BASE_PATH && pathname.startsWith(BASE_PATH) ? pathname.slice(BASE_PATH.length) : pathname;
+  return path.replace(/\/$/, '') || '/';
+};
+
 const PHONE = 'tel:+918686272266';
 // Launch check: confirm with the owner that 086862 72266 is WhatsApp-enabled before publishing.
 const WA_NUMBER = '918686272266';
@@ -207,17 +215,19 @@ function Link({
   className?: string;
   onClick?: () => void;
 }) {
+  const url = href.startsWith('/') ? `${BASE_PATH}${href}` : href;
+
   function click(e: MouseEvent<HTMLAnchorElement>) {
     onClick?.();
     if (href.startsWith('/') && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
       e.preventDefault();
-      window.history.pushState({}, '', href);
+      window.history.pushState({}, '', url);
       window.dispatchEvent(new Event('navigate'));
       window.scrollTo(0, 0);
     }
   }
   return (
-    <a href={href} className={className} onClick={click}>
+    <a href={url} className={className} onClick={click}>
       {children}
     </a>
   );
@@ -1852,10 +1862,10 @@ function Footer() {
 }
 
 export default function App() {
-  const [path, setPath] = useState(window.location.pathname.replace(/\/$/, '') || '/');
+  const [path, setPath] = useState(currentPath);
 
   useEffect(() => {
-    const update = () => setPath(window.location.pathname.replace(/\/$/, '') || '/');
+    const update = () => setPath(currentPath());
     window.addEventListener('popstate', update);
     window.addEventListener('navigate', update);
     return () => {
